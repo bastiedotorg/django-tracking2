@@ -7,9 +7,7 @@ from django.utils import timezone
 from tracking.managers import VisitorManager, PageviewManager
 from tracking.settings import TRACK_USING_GEOIP
 
-from django.contrib.gis.geoip import HAS_GEOIP
-if HAS_GEOIP:
-    from django.contrib.gis.geoip import GeoIP, GeoIPException
+from django.contrib.gis.geoip import GeoIP2, GeoIP2Exception
 
 GEOIP_CACHE_TYPE = getattr(settings, 'GEOIP_CACHE_TYPE', 4)
 
@@ -51,15 +49,15 @@ class Visitor(models.Model):
     @property
     def geoip_data(self):
         """Attempt to retrieve MaxMind GeoIP data based on visitor's IP."""
-        if not HAS_GEOIP or not TRACK_USING_GEOIP:
+        if not TRACK_USING_GEOIP:
             return
 
         if not hasattr(self, '_geoip_data'):
             self._geoip_data = None
             try:
-                gip = GeoIP(cache=GEOIP_CACHE_TYPE)
+                gip = GeoIP2(cache=GEOIP_CACHE_TYPE)
                 self._geoip_data = gip.city(self.ip_address)
-            except GeoIPException:
+            except GeoIP2Exception:
                 msg = 'Error getting GeoIP data for IP "{0}"'.format(
                     self.ip_address)
                 log.exception(msg)
